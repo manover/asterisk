@@ -1,0 +1,5 @@
+usr/lib/*/asterisk/modules/chan_pjsip.so
+usr/lib/*/asterisk/modules/res_pjsip.so
+usr/lib/*/asterisk/modules/res_pjsip_*.so
+usr/lib/*/asterisk/modules/func_pjsip_*.so
+usr/lib/*/asterisk/modules/res_hep_pjsip.so

@@ -1,0 +1,54 @@
+--- a/channels/chan_sip.c
++++ b/channels/chan_sip.c
+@@ -31174,18 +31174,6 @@
+ 	ast_format_cap_append(cap, ast_format_h263, 0);
+ }
+ 
+-static void display_nat_warning(const char *cat, int reason, struct ast_flags *flags) {
+-	int global_nat, specific_nat;
+-
+-	if (reason == CHANNEL_MODULE_LOAD && (specific_nat = ast_test_flag(&flags[0], SIP_NAT_FORCE_RPORT)) != (global_nat = ast_test_flag(&global_flags[0], SIP_NAT_FORCE_RPORT))) {
+-		ast_log(LOG_WARNING, "!!! PLEASE NOTE: Setting 'nat' for a peer/user that differs from the  global setting can make\n");
+-		ast_log(LOG_WARNING, "!!! the name of that peer/user discoverable by an attacker. Replies for non-existent peers/users\n");
+-		ast_log(LOG_WARNING, "!!! will be sent to a different port than replies for an existing peer/user. If at all possible,\n");
+-		ast_log(LOG_WARNING, "!!! use the global 'nat' setting and do not set 'nat' per peer/user.\n");
+-		ast_log(LOG_WARNING, "!!! (config category='%s' global force_rport='%s' peer/user force_rport='%s')\n", cat, AST_CLI_YESNO(global_nat), AST_CLI_YESNO(specific_nat));
+-	}
+-}
+-
+ static int cleanup_registration(void *obj, void *arg, int flags)
+ {
+ 	struct sip_registry *reg = obj;
+@@ -32296,7 +32284,6 @@
+ 			}
+ 			peer = build_peer(cat, ast_variable_browse(cfg, cat), NULL, 0, 0);
+ 			if (peer) {
+-				display_nat_warning(cat, reason, &peer->flags[0]);
+ 				ao2_t_link(peers, peer, "link peer into peers table");
+ 				if ((peer->type & SIP_TYPE_PEER) && !ast_sockaddr_isnull(&peer->addr)) {
+ 					ao2_t_link(peers_by_ip, peer, "link peer into peers_by_ip table");
+--- a/utils/extconf.c
++++ b/utils/extconf.c
+@@ -5699,8 +5699,6 @@
+ 						if (plus)
+ 							ipri += atoi(plus);
+ 						lastpri = ipri;
+-						if (!ast_opt_dont_warn && !strcmp(realext, "_."))
+-							ast_log(LOG_WARNING, "The use of '_.' for an extension is strongly discouraged and can have unexpected behavior.  Please use '_X.' instead at line %d\n", v->lineno);
+ 						if (ast_add_extension2(con, 0, realext, ipri, label, cidmatch, appl, strdup(data), ast_free_ptr, global_registrar)) {
+ 							ast_log(LOG_WARNING, "Unable to register extension at line %d\n", v->lineno);
+ 						}
+--- a/pbx/pbx_config.c
++++ b/pbx/pbx_config.c
+@@ -1833,11 +1833,6 @@
+ 						ipri += atoi(plus);
+ 					}
+ 					lastpri = ipri;
+-					if (!ast_opt_dont_warn && (!strcmp(realext, "_.") || !strcmp(realext, "_!"))) {
+-						ast_log(LOG_WARNING,
+-							"The use of '%s' for an extension is strongly discouraged and can have unexpected behavior.  Please use '_X%c' instead at line %d of %s\n",
+-							realext, realext[1], v->lineno, vfile);
+-					}
+ 					if (ast_add_extension2(con, 0, realext, ipri, label, cidmatch, appl, ast_strdup(data), ast_free_ptr, registrar)) {
+ 						ast_log(LOG_WARNING,
+ 							"Unable to register extension at line %d of %s\n",

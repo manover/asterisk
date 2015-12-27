@@ -1,0 +1,6 @@
+usr/lib/*/asterisk/modules/cdr_odbc.so
+usr/lib/*/asterisk/modules/cel_odbc.so
+usr/lib/*/asterisk/modules/res_config_odbc.so
+usr/lib/*/asterisk/modules/cdr_adaptive_odbc.so
+usr/lib/*/asterisk/modules/res_odbc.so
+usr/lib/*/asterisk/modules/func_odbc.so

@@ -1,0 +1,11 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -178,7 +178,7 @@
+      OSARCH=cygwin
+      PBX_WINARCH=1
+      ;;
+-     linux-gnueabi* |  linux-gnuspe)
++     linux-gnu*)
+      OSARCH=linux-gnu
+      ;;
+      kfreebsd*-gnu)

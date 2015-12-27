@@ -1,0 +1,11 @@
+--- a/res/Makefile
++++ b/res/Makefile
+@@ -76,7 +76,7 @@
+ ael/pval.o: ael/pval.c
+ 
+ clean::
+-	rm -f snmp/*.o snmp/*.i ael/*.o ael/*.i ais/*.o ais/*.i snmp/*.gcda snmp/*.gcno ael/*.gcda ael/*.gcno
++	rm -f snmp/*.o snmp/*.i ael/*.o ael/*.i ais/*.o ais/*.i snmp/*.gcda snmp/*.gcno ael/*.gcda ael/*.gcno ari/*.o
+ 	rm -f res_pjsip/*.[oi] res_pjsip/*.gcda res_pjsip/*.gcno
+ 	rm -f stasis/*.[oi] stasis/*.gcda stasis/*.gcno
+ 	rm -f parking/*.[oi] parking/*.gcda parking/*.gcno
