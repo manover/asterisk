@@ -1,0 +1,2 @@
+usr/lib/*/asterisk/res_config_sqlite.so
+debian/tmp/etc/asterisk/res_config_sqlite.conf

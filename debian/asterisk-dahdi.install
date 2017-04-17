@@ -1,0 +1,6 @@
+usr/lib/*/asterisk/app_flash.so
+usr/lib/*/asterisk/app_dahdiras.so
+usr/lib/*/asterisk/chan_dahdi.so
+usr/lib/*/asterisk/codec_dahdi.so
+usr/lib/*/asterisk/res_timing_dahdi.so
+debian/tmp/etc/asterisk/chan_dahdi.conf

@@ -1,0 +1,2 @@
+usr/lib/*/asterisk/chan_ooh323.so
+debian/tmp/etc/asterisk/ooh323.conf

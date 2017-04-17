@@ -1,0 +1,36 @@
+--- a/bootstrap.sh
++++ b/bootstrap.sh
+@@ -28,10 +28,10 @@ case `uname -sr` in
+ 	*)
+ 		MY_AC_VER=
+ 		MY_AM_VER=
+-		AUTOCONF_VERSION=2.60
+-		AUTOMAKE_VERSION=1.9
+-		export AUTOCONF_VERSION
+-		export AUTOMAKE_VERSION
++		#AUTOCONF_VERSION=2.60
++		#AUTOMAKE_VERSION=1.9
++		#export AUTOCONF_VERSION
++		#export AUTOMAKE_VERSION
+ 		;;
+ esac
+ 
+@@ -47,4 +47,7 @@ autoconf${MY_AC_VER}
+ autoheader${MY_AC_VER}
+ automake${MY_AM_VER} --add-missing --copy 2>/dev/null
+ 
++cd menuselect
++./bootstrap.sh
++
+ exit 0
+--- a/configure.ac
++++ b/configure.ac
+@@ -17,7 +17,7 @@ AC_CANONICAL_HOST
+ # check existence of the package
+ AC_CONFIG_SRCDIR([main/asterisk.c])
+ 
+-AC_CONFIG_AUX_DIR(`pwd`)
++AC_CONFIG_AUX_DIR([build-aux])
+ 
+ AC_COPYRIGHT("Asterisk")
+ AC_REVISION($Revision$)

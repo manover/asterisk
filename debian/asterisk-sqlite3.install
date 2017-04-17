@@ -1,0 +1,6 @@
+usr/lib/*/asterisk/cdr_sqlite3_custom.so
+usr/lib/*/asterisk/cel_sqlite3_custom.so
+usr/lib/*/asterisk/res_config_sqlite3.so
+debian/tmp/etc/asterisk/cdr_sqlite3_custom.conf
+debian/tmp/etc/asterisk/cel_sqlite3_custom.conf
+debian/tmp/etc/asterisk/res_config_sqlite3.conf

@@ -1,0 +1,9 @@
+usr/lib/*/asterisk/chan_pjsip.so
+usr/lib/*/asterisk/res_pjsip.so
+usr/lib/*/asterisk/res_pjproject.so
+usr/lib/*/asterisk/res_pjsip_*.so
+usr/lib/*/asterisk/func_pjsip_*.so
+usr/lib/*/asterisk/res_hep_pjsip.so
+debian/tmp/etc/asterisk/pjsip.conf
+debian/tmp/etc/asterisk/pjsip_notify.conf
+debian/tmp/etc/asterisk/pjsip_wizard.conf

@@ -1,0 +1,6 @@
+usr/lib/*/asterisk/cdr_pgsql.so
+usr/lib/*/asterisk/cel_pgsql.so
+usr/lib/*/asterisk/res_config_pgsql.so
+debian/tmp/etc/asterisk/cdr_pgsql.conf
+debian/tmp/etc/asterisk/cel_pgsql.conf
+debian/tmp/etc/asterisk/res_pgsql.conf

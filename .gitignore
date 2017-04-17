@@ -34,4 +34,4 @@ menuselect-tree
 latex
 doxygen.log
 out/
-
+.pc/

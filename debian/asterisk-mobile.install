@@ -1,0 +1,2 @@
+usr/lib/*/asterisk/chan_mobile.so
+debian/tmp/etc/asterisk/chan_mobile.conf

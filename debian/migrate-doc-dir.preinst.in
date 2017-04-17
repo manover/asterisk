@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# In order to migrate doc directory to a symlink, remove the directory
+if [ -d /usr/share/doc/@PKG@ ]; then
+	rm -rf /usr/share/doc/@PKG@
+fi
+
+#DEBHELPER#

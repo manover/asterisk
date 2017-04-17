@@ -1,0 +1,169 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -48,7 +48,7 @@ AC_SUBST([astsbindir],        ['${sbindi
+ AC_SUBST([astetcdir],         ['${sysconfdir}/asterisk'])dnl
+ AC_SUBST([astheaderdir],      ['${includedir}/asterisk'])dnl
+ AC_SUBST([astlibdir],         ['${libdir}'])dnl
+-AC_SUBST([astmoddir],         ['${libdir}/asterisk/modules'])dnl
++AC_SUBST([astmoddir],         ['${libdir}/asterisk'])dnl
+ AC_SUBST([astmandir],         ['${mandir}'])dnl
+ AC_SUBST([astvarlibdir],      ['${localstatedir}/lib/asterisk'])dnl
+ AC_SUBST([astdatadir],        ['${datadir}/asterisk'])dnl
+--- a/contrib/scripts/astversion
++++ b/contrib/scripts/astversion
+@@ -372,7 +372,7 @@ gather_packages()
+ locate_modules()
+ {
+ 	# build a list of files that need to be located
+-	MODULES=($LIBDIR/asterisk/modules/*.so)
++	MODULES=($LIBDIR/asterisk/*.so)
+ 
+ 	# add libraries and binaries that exist to the files list
+ 	for MODULE in ${MODULES[@]}
+--- a/res/res_ari_asterisk.c
++++ b/res/res_ari_asterisk.c
+@@ -398,7 +398,7 @@ fin: __attribute__((unused))
+ 	return;
+ }
+ /*!
+- * \brief Parameter parsing callback for /asterisk/modules.
++ * \brief Parameter parsing callback for /asterisk.
+  * \param get_params GET parameters in the HTTP request.
+  * \param path_vars Path variables extracted from the request.
+  * \param headers HTTP headers.
+@@ -432,13 +432,13 @@ static void ast_ari_asterisk_list_module
+ 			is_valid = ast_ari_validate_list(response->message,
+ 				ast_ari_validate_module_fn());
+ 		} else {
+-			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk/modules\n", code);
++			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk\n", code);
+ 			is_valid = 0;
+ 		}
+ 	}
+ 
+ 	if (!is_valid) {
+-		ast_log(LOG_ERROR, "Response validation failed for /asterisk/modules\n");
++		ast_log(LOG_ERROR, "Response validation failed for /asterisk\n");
+ 		ast_ari_response_error(response, 500,
+ 			"Internal Server Error", "Response validation failed");
+ 	}
+@@ -448,7 +448,7 @@ fin: __attribute__((unused))
+ 	return;
+ }
+ /*!
+- * \brief Parameter parsing callback for /asterisk/modules/{moduleName}.
++ * \brief Parameter parsing callback for /asterisk/{moduleName}.
+  * \param get_params GET parameters in the HTTP request.
+  * \param path_vars Path variables extracted from the request.
+  * \param headers HTTP headers.
+@@ -491,13 +491,13 @@ static void ast_ari_asterisk_get_module_
+ 			is_valid = ast_ari_validate_module(
+ 				response->message);
+ 		} else {
+-			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk/modules/{moduleName}\n", code);
++			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk/{moduleName}\n", code);
+ 			is_valid = 0;
+ 		}
+ 	}
+ 
+ 	if (!is_valid) {
+-		ast_log(LOG_ERROR, "Response validation failed for /asterisk/modules/{moduleName}\n");
++		ast_log(LOG_ERROR, "Response validation failed for /asterisk/{moduleName}\n");
+ 		ast_ari_response_error(response, 500,
+ 			"Internal Server Error", "Response validation failed");
+ 	}
+@@ -507,7 +507,7 @@ fin: __attribute__((unused))
+ 	return;
+ }
+ /*!
+- * \brief Parameter parsing callback for /asterisk/modules/{moduleName}.
++ * \brief Parameter parsing callback for /asterisk/{moduleName}.
+  * \param get_params GET parameters in the HTTP request.
+  * \param path_vars Path variables extracted from the request.
+  * \param headers HTTP headers.
+@@ -549,13 +549,13 @@ static void ast_ari_asterisk_load_module
+ 			is_valid = ast_ari_validate_void(
+ 				response->message);
+ 		} else {
+-			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk/modules/{moduleName}\n", code);
++			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk/{moduleName}\n", code);
+ 			is_valid = 0;
+ 		}
+ 	}
+ 
+ 	if (!is_valid) {
+-		ast_log(LOG_ERROR, "Response validation failed for /asterisk/modules/{moduleName}\n");
++		ast_log(LOG_ERROR, "Response validation failed for /asterisk/{moduleName}\n");
+ 		ast_ari_response_error(response, 500,
+ 			"Internal Server Error", "Response validation failed");
+ 	}
+@@ -565,7 +565,7 @@ fin: __attribute__((unused))
+ 	return;
+ }
+ /*!
+- * \brief Parameter parsing callback for /asterisk/modules/{moduleName}.
++ * \brief Parameter parsing callback for /asterisk/{moduleName}.
+  * \param get_params GET parameters in the HTTP request.
+  * \param path_vars Path variables extracted from the request.
+  * \param headers HTTP headers.
+@@ -608,13 +608,13 @@ static void ast_ari_asterisk_unload_modu
+ 			is_valid = ast_ari_validate_void(
+ 				response->message);
+ 		} else {
+-			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk/modules/{moduleName}\n", code);
++			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk/{moduleName}\n", code);
+ 			is_valid = 0;
+ 		}
+ 	}
+ 
+ 	if (!is_valid) {
+-		ast_log(LOG_ERROR, "Response validation failed for /asterisk/modules/{moduleName}\n");
++		ast_log(LOG_ERROR, "Response validation failed for /asterisk/{moduleName}\n");
+ 		ast_ari_response_error(response, 500,
+ 			"Internal Server Error", "Response validation failed");
+ 	}
+@@ -624,7 +624,7 @@ fin: __attribute__((unused))
+ 	return;
+ }
+ /*!
+- * \brief Parameter parsing callback for /asterisk/modules/{moduleName}.
++ * \brief Parameter parsing callback for /asterisk/{moduleName}.
+  * \param get_params GET parameters in the HTTP request.
+  * \param path_vars Path variables extracted from the request.
+  * \param headers HTTP headers.
+@@ -667,13 +667,13 @@ static void ast_ari_asterisk_reload_modu
+ 			is_valid = ast_ari_validate_void(
+ 				response->message);
+ 		} else {
+-			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk/modules/{moduleName}\n", code);
++			ast_log(LOG_ERROR, "Invalid error response %d for /asterisk/{moduleName}\n", code);
+ 			is_valid = 0;
+ 		}
+ 	}
+ 
+ 	if (!is_valid) {
+-		ast_log(LOG_ERROR, "Response validation failed for /asterisk/modules/{moduleName}\n");
++		ast_log(LOG_ERROR, "Response validation failed for /asterisk/{moduleName}\n");
+ 		ast_ari_response_error(response, 500,
+ 			"Internal Server Error", "Response validation failed");
+ 	}
+--- a/rest-api/api-docs/asterisk.json
++++ b/rest-api/api-docs/asterisk.json
+@@ -179,7 +179,7 @@
+ 			]
+ 		},
+ 		{
+-			"path": "/asterisk/modules",
++			"path": "/asterisk",
+ 			"description": "Asterisk modules",
+ 			"operations": [
+ 				{
+@@ -191,7 +191,7 @@
+ 			]
+ 		},
+ 		{
+-			"path": "/asterisk/modules/{moduleName}",
++			"path": "/asterisk/{moduleName}",
+ 			"description": "Asterisk module",
+ 			"operations": [
+ 				{

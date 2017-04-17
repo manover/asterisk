@@ -1,0 +1,6 @@
+usr/lib/*/asterisk/app_mysql.so
+usr/lib/*/asterisk/cdr_mysql.so
+usr/lib/*/asterisk/res_config_mysql.so
+debian/tmp/etc/asterisk/app_mysql.conf
+debian/tmp/etc/asterisk/cdr_mysql.conf
+debian/tmp/etc/asterisk/res_config_mysql.conf

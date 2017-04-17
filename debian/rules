@@ -1,0 +1,219 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE=1
+export DH_OPTIONS=-v
+
+include /usr/share/dpkg/architecture.mk
+
+BUILD_AUX = build-aux/install-sh build-aux/config.guess build-aux/config.sub
+
+# Sanity check for a stable release:
+SAVED_ABI_HASH = 9098801ea190a0a560a7a5656c502396
+
+# We copy around a number of things in case we're linux:
+BUILD_OS := $(DEB_BUILD_ARCH_OS)
+
+export PROC := $(DEB_BUILD_GNU_CPU)
+
+# don't let asterisk mess with build flags
+BUILDFLAGS += AST_FORTIFY_SOURCE= DEBUG= OPTIMIZE=
+# show full gcc arguments instead of [CC] and [LD]
+BUILDFLAGS += NOISY_BUILD=yes
+BUILDFLAGS += ASTDATADIR=/usr/share/asterisk ASTVARRUNDIR=/run/asterisk
+
+ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
+	ENABLE_DEBUG += --enable-dev-mode
+endif
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+	INSTALL_PROGRAM += -s
+endif
+
+DEBVERSION := $(shell dpkg-parsechangelog -SVersion)
+DEB_NOEPOCH_VERSION := $(shell echo $(DEBVERSION) | cut -d':' -f 2)
+DEB_SRC_VERSION := $(shell echo $(DEB_NOEPOCH_VERSION) | sed -e 's/-[^-]\+$$//')
+UPVERSION := $(shell echo $(DEB_SRC_VERSION) | sed -e 's/[.~]dfsg[0-9]*//' -e 's/~\(\(rc\|beta\)[0-9]\)/-\1/')
+
+FILENAME := asterisk_$(DEB_SRC_VERSION).orig.tar.gz
+UPFILENAME := asterisk_$(UPVERSION).orig.tar.gz
+URL := http://downloads.asterisk.org/pub/telephony/asterisk/releases/asterisk-$(UPVERSION).tar.gz
+
+# make sure we have 'fetch' . We need to have either wget or fetch
+# on the system. However it is generally not a good idea to actually
+# get remote tarballs at build time. So if neither wget nor fetch 
+# happen to be installed, the configure script will find a dummy
+# fetch script that always returns an error.
+FETCH_ENV = PATH=$$PATH:$(CURDIR)/debian/dummyprogs
+
+LIB=lib/$(DEB_HOST_MULTIARCH)
+AST=asterisk
+MIGRATE_DOC_DIR = modules mobile mp3 mysql ooh323 voicemail voicemail-imapstorage voicemail-odbcstorage
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+export DEB_CFLAGS_MAINT_APPEND = -fgnu89-inline
+
+%:
+	dh $@
+
+override_dh_autoreconf:
+	dh_autoreconf --as-needed -- ./bootstrap.sh
+
+# Make sure the configure script gets an CFLAGS parameter. Otherwise
+# it will build with -march=native
+# Pass CPPFLAGS in the CFLAGS as otherwise the build system will
+# ignore them.
+
+$(BUILD_AUX):
+	mkdir -p build-aux && cp -L /usr/share/libtool/$@ $@
+
+override_dh_auto_configure: $(BUILD_AUX)
+	chmod 755 $(CURDIR)/debian/dummyprogs/fetch
+	$(FETCH_ENV) dh_auto_configure --		\
+		--with-gsm							\
+		--with-imap=system					\
+		--without-pwlib						\
+		--with-vpb							\
+		--with-openr2						\
+		--with-dahdi						\
+		--with-cap							\
+		--disable-asteriskssl				\
+		--without-x11						\
+		--with-pjproject					\
+		${ENABLE_DEBUG}
+	@set -e ; \
+	$(MAKE) menuselect.makeopts BUILD_CFLAGS="-g -O2 -fPIE -w" BUILD_LDFLAGS="$(LDFLAGS)" ; \
+	menuselect/menuselect --enable G711_NEW_ALGORITHM menuselect.makeopts ; \
+	menuselect/menuselect --enable G711_REDUCED_BRANCHING menuselect.makeopts ; \
+	menuselect/menuselect --disable BUILD_NATIVE menuselect.makeopts ; \
+	if [ "x${ENABLE_DEBUG}" != "x" ] ; then \
+		menuselect/menuselect --enable BETTER_BACKTRACES menuselect.makeopts ; \
+		menuselect/menuselect --enable DEBUG_THREADS menuselect.makeopts ; \
+	fi
+
+override_dh_auto_build:
+	$(FETCH_ENV) dh_auto_build -- $(BUILDFLAGS)
+	# Sanity check: don't break the ABI for modules:
+	@abi_hash=`awk -F'"' '/AST_BUILDOPT_SUM/ {print $$2}' include/asterisk/buildopts.h`; \
+	  if [ "$$abi_hash" != "$(SAVED_ABI_HASH)" ]; then \
+	    echo "Debian packaging problem: ABI checksum changed."; \
+	    echo "  Was: $(SAVED_ABI_HASH)"; \
+	    echo "  Now: $$abi_hash"; \
+	    echo "Check include/asterisk/buildopts.h"; \
+	    exit 1; \
+	  fi
+
+SND_FILE=asterisk-core-sounds-en-gsm-1.4.20.tar.gz
+
+override_dh_clean:
+	if [ -r sounds/$(SND_FILE) ]; then mv sounds/$($SND_FILE) debian/; fi
+	GREP=grep AWK=awk $(MAKE) distclean
+	if [ -r debian/$(SND_FILE) ]; then mv debian/$(SND_FILE) sounds/; fi
+	-test -d configs && chmod -x configs/*.sample
+	[ ! -f .version.debian_sav ] || mv .version.debian_sav .version
+	if [ -f configure.debian_sav ]; then mv configure.debian_sav configure; fi
+	for p in $(MIGRATE_DOC_DIR); do \
+		rm -f debian/$(AST)-$$p.preinst; \
+	done
+	dh_clean $(BUILD_AUX)
+
+override_dh_gencontrol:
+	AST_BUILDOPT_SUM=`grep AST_BUILDOPT_SUM include/asterisk/buildopts.h  | sed -e 's/.\+ "\(.\+\)\"/\1/g'`; \
+		dh_gencontrol -- -Vasterisk:ABI=$$AST_BUILDOPT_SUM
+
+SUBPACKS_EXTRA = voicemail voicemail-odbcstorage voicemail-imapstorage ooh323 \
+	pgsql mysql mp3 pjsip sqlite sqlite3 odbc ari
+ifeq (linux,$(BUILD_OS))
+SUBPACKS_EXTRA += mobile dahdi vpb
+endif
+SUBPACKS_EXTRA_DIRS = $(SUBPACKS_EXTRA:%=$(CURDIR)/debian/asterisk-%)
+SUBPACKS_EXTRA_DIRS_MOD = $(SUBPACKS_EXTRA_DIRS:%=%/usr/$(LIB)/asterisk)
+
+override_dh_auto_install:
+	$(FETCH_ENV) dh_auto_install -- $(BUILDFLAGS) config samples
+	cp -a configs $(CURDIR)/debian/tmp/usr/share/asterisk/conf
+	mkdir -p $(CURDIR)/debian/tmp/usr/bin/
+	mkdir -p $(CURDIR)/debian/tmp/usr/share/man/man1
+	cp -a debian/asterisk-config-custom $(CURDIR)/debian/tmp/usr/bin/
+	cp -a debian/asterisk-config-custom $(CURDIR)/debian/tmp/usr/share/man/man1/
+	$(RM) -f $(CURDIR)/debian/tmp/usr/sbin/conf2ael
+	$(RM) -f $(CURDIR)/debian/tmp/usr/sbin/muted
+	$(RM) -f $(CURDIR)/debian/tmp/usr/sbin/streamplayer
+	$(RM) -f $(CURDIR)/debian/tmp/usr/sbin/stereorize
+	$(RM) -f $(CURDIR)/debian/tmp/usr/sbin/hashtest*
+	$(RM) -f $(CURDIR)/debian/tmp/usr/sbin/refcounter
+
+override_dh_install:
+	dh_installdocs -A -N$(AST)-doc -N$(AST)-dev -N$(AST)-config --link-doc=$(AST)
+	dh_install
+	for p in $(MIGRATE_DOC_DIR); do \
+		sed -e "s/@PKG@/$(AST)-$$p/g" debian/migrate-doc-dir.preinst.in >debian/$(AST)-$$p.preinst; \
+	done
+	extra_packs=`find $(SUBPACKS_EXTRA_DIRS_MOD) -name '*.so' -printf '%f\n'`\
+		    ; cd $(CURDIR)/debian/asterisk-modules/usr/$(LIB)/asterisk \
+		    && rm -f $$extra_packs
+	# Rename dh_install file for -imapstorage and -odbcstorage.
+	mv $(CURDIR)/debian/asterisk-voicemail-imapstorage/usr/$(LIB)/asterisk/app_voicemail_imapstorage.so \
+		$(CURDIR)/debian/asterisk-voicemail-imapstorage/usr/$(LIB)/asterisk/app_voicemail.so
+	mv $(CURDIR)/debian/asterisk-voicemail-odbcstorage/usr/$(LIB)/asterisk/app_voicemail_odbcstorage.so \
+		$(CURDIR)/debian/asterisk-voicemail-odbcstorage/usr/$(LIB)/asterisk/app_voicemail.so
+
+override_dh_fixperms:
+	dh_fixperms
+	# should follow dh_fixperms; asterisk configurations may contain
+	# sensitive information, such as passwords
+	if [ -d $(CURDIR)/debian/asterisk-config ]; then \
+		chmod o-rwx $(CURDIR)/debian/asterisk-config/etc/asterisk/*; \
+		chmod o+rx  $(CURDIR)/debian/asterisk-config/etc/asterisk/manager.d; \
+	fi
+
+override_dh_strip:
+ifeq (,$(findstring noddebs,$(DEB_BUILD_OPTIONS)))
+	dh_strip --dbgsym-migration='asterisk-dbg (<< 13.8.2~)'
+else
+	dh_strip --no-automatic-dbgsym
+endif
+
+print-flags:
+	@@echo "BUILDFLAGS: $(BUILDFLAGS)"
+	@@echo "FETCH_ENV:	$(FETCH_ENV)"
+	@@echo "CFLAGS:		$(CFLAGS)"
+	@@echo "LDFLAGS:	$(LDFLAGS)"
+	@@echo "CPPFLAGS:	$(CPPFLAGS)"
+
+print-version:
+	@@echo "Debian version:          $(DEBVERSION)"
+	@@echo "Upstream version:        $(UPVERSION)"
+
+TMP_TARBALL_TOP=../tarballs/asterisk-$(UPVERSION).tmp/asterisk-$(UPVERSION)
+get-orig-source:
+	@@dh_testdir
+	#@@[ -d ../tarballs/. ]||mkdir -p ../tarballs
+	#@@echo Downloading $(FILENAME) from $(URL) ...
+	#@@wget -nv -T10 -t3 -O ../tarballs/$(FILENAME) $(URL)
+	@echo Downloading $(UPFILENAME) from $(URL) ...
+	@wget -nv -T10 -t3 -O ../tarballs/$(UPFILENAME) $(URL)
+	@echo Repacking as DFSG-free...
+	@mkdir -p ../tarballs/asterisk-$(UPVERSION).tmp/
+	@cd ../tarballs/asterisk-$(UPVERSION).tmp ; \
+		tar xfz ../$(UPFILENAME)
+	@# in case the tarball is not clean:
+	@#FIXME: AST.* and res/pjproject are no longer in the tarball.
+	@rm -rf $(TMP_TARBALL_TOP)/AST.txt
+	@rm -rf $(TMP_TARBALL_TOP)/AST.pdf
+	@rm -rf $(TMP_TARBALL_TOP)/doc/Asterisk-Admin-Guide/
+	@rm -rf $(TMP_TARBALL_TOP)/doc/Asterisk-Admin-Guide.pdf
+	@rm -rf $(TMP_TARBALL_TOP)/doc/Asterisk-*-Reference.pdf
+	@rm -rf $(TMP_TARBALL_TOP)/codecs/ilbc
+	@rm -rf $(TMP_TARBALL_TOP)/res/pjproject
+	# While we're at it: remove some generated files that will become
+	# invalid:
+	@rm -rf $(TMP_TARBALL_TOP)/*/.makeopts
+	@rm -rf $(TMP_TARBALL_TOP)/*/.*.makeopts
+	@rm -rf $(TMP_TARBALL_TOP)/*/.moduleinfo
+	@rm -rf $(TMP_TARBALL_TOP)/*/.*.moduleinfo
+	# And some large sound files we already ship in a different package:
+	@rm -rf $(TMP_TARBALL_TOP)/sounds/*.tar.gz
+	@cd ../tarballs/asterisk-$(UPVERSION).tmp ; \
+	 	tar cf - * | gzip -9 >../$(FILENAME)
+	@echo Cleaning up...
+	@$(RM) -rf ../tarballs/asterisk-$(UPVERSION).tmp/

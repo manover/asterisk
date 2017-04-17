@@ -1,0 +1,11 @@
+usr/lib/*/asterisk/cdr_odbc.so
+usr/lib/*/asterisk/cel_odbc.so
+usr/lib/*/asterisk/res_config_odbc.so
+usr/lib/*/asterisk/cdr_adaptive_odbc.so
+usr/lib/*/asterisk/res_odbc.so
+usr/lib/*/asterisk/func_odbc.so
+debian/tmp/etc/asterisk/cdr_adaptive_odbc.conf
+debian/tmp/etc/asterisk/cdr_odbc.conf
+debian/tmp/etc/asterisk/cel_odbc.conf
+debian/tmp/etc/asterisk/func_odbc.conf
+debian/tmp/etc/asterisk/res_odbc.conf

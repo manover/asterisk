@@ -1,0 +1,2 @@
+usr/lib/*/asterisk/chan_vpb.so
+debian/tmp/etc/asterisk/vpb.conf

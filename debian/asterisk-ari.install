@@ -1,0 +1,13 @@
+usr/lib/*/asterisk/res_ari.so
+usr/lib/*/asterisk/res_ari_asterisk.so
+usr/lib/*/asterisk/res_ari_applications.so
+usr/lib/*/asterisk/res_ari_bridges.so
+usr/lib/*/asterisk/res_ari_channels.so
+usr/lib/*/asterisk/res_ari_device_states.so
+usr/lib/*/asterisk/res_ari_endpoints.so
+usr/lib/*/asterisk/res_ari_events.so
+usr/lib/*/asterisk/res_ari_model.so
+usr/lib/*/asterisk/res_ari_playbacks.so
+usr/lib/*/asterisk/res_ari_recordings.so
+usr/lib/*/asterisk/res_ari_sounds.so
+debian/tmp/etc/asterisk/ari.conf
